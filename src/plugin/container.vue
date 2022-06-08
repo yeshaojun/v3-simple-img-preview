@@ -49,7 +49,7 @@
   </div>
 </template>
 <script lang="ts">
-import { ImageConfig } from "./type";
+import { ImgPreviewConfigType } from "../types/index";
 // config = { urls: [], current: 1, loop: false, header: vdom, success, fail }
 // loop 是否可循环预览
 // 右上角默认 关闭，下载，放大/缩小，自定义
@@ -58,7 +58,7 @@ export default defineComponent({
   name: "img-preview",
   props: {
     config: {
-      type: Object as PropType<ImageConfig>,
+      type: Object as PropType<ImgPreviewConfigType>,
       default() {
         return {};
       },
@@ -66,7 +66,7 @@ export default defineComponent({
   },
   setup() {
     const imgDom = ref();
-    const dataConfig = ref<ImageConfig>({
+    const dataConfig = ref<ImgPreviewConfigType>({
       current: 0,
       urls: [],
     });

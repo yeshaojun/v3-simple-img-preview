@@ -1,7 +1,20 @@
 {
   "name": "v3-simple-img-preview",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "private": false,
+  "description": "vue3图片预览插件",
+  "author": {
+    "name": "ysj",
+    "email": "yeshaojun5056@163.com"
+  },
+  "typings": "lib/index.d.ts",
+  "keywords": [
+    "vue3",
+    "typescript",
+    "images",
+    "图片",
+    "图片预览"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/yeshaojun/v3-simple-img-preview"
@@ -10,7 +23,7 @@
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
     "lint": "vue-cli-service lint",
-    "lib": "vue-cli-service build --target lib --name v3-imgpreview --dest lib src/plugin/index.ts"
+    "lib": "vue-cli-service build --target lib --name 3-simple-img-preview --dest lib src/plugin/index.ts"
   },
   "dependencies": {
     "vue": "^3.0.0",

@@ -1,8 +1,8 @@
 import { App, createApp, h } from "vue";
 import ImgContainer from "./container.vue";
-import { ImageConfig } from "./type";
+import { ImgPreviewConfigType } from "../types/index";
 
-const createDom = (config: ImageConfig): void => {
+const createDom = (config: ImgPreviewConfigType): void => {
   let div!: HTMLElement | null;
   let Ctor!: App<Element>;
   const dom = document.getElementsByClassName("ysj-imgage-wrapper");
@@ -25,7 +25,7 @@ const createDom = (config: ImageConfig): void => {
   Ctor.mount(div);
 };
 
-export const previewImage = (config: ImageConfig): void => {
+export const previewImage = (config: ImgPreviewConfigType): void => {
   createDom(config);
 };
 
