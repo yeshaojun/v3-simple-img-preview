@@ -2,6 +2,10 @@
   "name": "v3-simple-img-preview",
   "version": "0.1.0",
   "private": false,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yeshaojun/v3-simple-img-preview"
+  },
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
