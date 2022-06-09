@@ -4,10 +4,11 @@
 
 <script lang="ts">
 import { Options, Vue } from "vue-class-component";
+import { previewImage } from "./plugin/index";
 @Options({
   methods: {
     preview() {
-      this.$previewImage({
+      previewImage({
         current: 1,
         urls: [
           "https://c-ssl.duitang.com/uploads/item/201912/28/20191228105602_4Wm5z.jpeg",

@@ -11,5 +11,23 @@ module.exports = {
         },
       ]),
     ],
+    module: {
+      rules: [
+        {
+          test: /\.(jpg|png|gif|svg)$/,
+          use: {
+            loader: "url-loader",
+            options: {
+              name: "img/[name].[ext]",
+              esModule: false,
+              limit: 3000,
+            },
+          },
+        },
+      ],
+    },
+  },
+  css: {
+    extract: false,
   },
 };

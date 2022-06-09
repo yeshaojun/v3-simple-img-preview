@@ -7,28 +7,28 @@
       </div>
       <div class="ysj-image-opt" v-if="!config.header">
         <button @click="zoom('big')">
-          <img src="../assets/zoom-in.svg" alt="big" />
+          <svg class="iconpark-icon"><use href="#zoom-in"></use></svg>
         </button>
         <button @click="zoom('small')">
-          <img src="../assets/zoom-out.svg" alt="small" />
+          <svg class="iconpark-icon"><use href="#zoom-out"></use></svg>
         </button>
         <a
           :href="dataConfig.urls[dataConfig.current]"
           target="_blank"
           :download="'image' + dataConfig.current"
         >
-          <img src="../assets/download.svg" alt="down" />
+          <svg class="iconpark-icon"><use href="#download-four"></use></svg>
         </a>
         <button @click="getFull">
-          <img src="../assets/maximize.svg" alt="full" />
+          <svg class="iconpark-icon"><use href="#full-screen"></use></svg>
         </button>
         <button @click="close">
-          <img src="../assets/close.svg" alt="close" />
+          <svg class="iconpark-icon"><use href="#close"></use></svg>
         </button>
       </div>
     </div>
     <div class="ysj-image-container-content">
-      <span v-show="loading">图片加载中</span>
+      <span v-show="loading" class="loading-wrapper">图片加载中</span>
       <img ref="imgDom" v-show="!loading" class="current-img" alt="" />
     </div>
     <div></div>
@@ -37,14 +37,14 @@
       v-if="dataConfig.current > 1"
       @click="arrawLeft"
     >
-      <img src="../assets/chevron-left.svg" alt="left" srcset="" />
+      <svg class="iconpark-icon"><use href="#left"></use></svg>
     </div>
     <div
       class="ysj-image-arraw-right"
       v-if="dataConfig.current < dataConfig.urls.length"
       @click="arrawRight"
     >
-      <img src="../assets/chevron-right.svg" alt="right" srcset="" />
+      <svg class="iconpark-icon"><use href="#right"></use></svg>
     </div>
   </div>
 </template>
@@ -54,6 +54,7 @@ import { ImgPreviewConfigType } from "../types/index";
 // loop 是否可循环预览
 // 右上角默认 关闭，下载，放大/缩小，自定义
 import { defineComponent, PropType, ref, reactive } from "vue";
+import { loadIcon } from "./icon";
 export default defineComponent({
   name: "img-preview",
   props: {
@@ -82,6 +83,7 @@ export default defineComponent({
       loading,
       zoomRate,
       imgInfo,
+      loadIcon,
     };
   },
   methods: {
@@ -205,6 +207,7 @@ export default defineComponent({
     },
   },
   mounted() {
+    this.loadIcon();
     if (this.config) {
       this.dataConfig = Object.assign({}, this.config);
       this.loadImage();
@@ -213,11 +216,18 @@ export default defineComponent({
 });
 </script>
 <style lang="css" scoped>
+.iconpark-icon {
+  width: 24px;
+  height: 24px;
+  color: #fff;
+}
 .ysj-image-container {
   background-color: #000;
   position: absolute;
   width: 100%;
   top: 0;
+  left: 0;
+  right: 0;
   bottom: 0;
   z-index: 99999;
   color: #fff;
@@ -279,5 +289,12 @@ export default defineComponent({
   transform: translateX(-50%) translateY(-50%);
   pointer-events: none;
   user-select: none;
+}
+.loading-wrapper {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-50%);
+  color: #999;
 }
 </style>
