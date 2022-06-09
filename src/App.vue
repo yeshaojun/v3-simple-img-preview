@@ -14,6 +14,9 @@ import { previewImage } from "./plugin/index";
           "https://c-ssl.duitang.com/uploads/item/201912/28/20191228105602_4Wm5z.jpeg",
           "https://c-ssl.duitang.com/uploads/blog/202107/03/20210703145407_8a8cc.jpg",
         ],
+        fail: (e) => {
+          console.log("e", e);
+        },
       });
     },
   },

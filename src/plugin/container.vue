@@ -29,6 +29,7 @@
     </div>
     <div class="ysj-image-container-content">
       <span v-show="loading" class="loading-wrapper">图片加载中</span>
+      <span v-show="error" class="loading-wrapper">图片加载失败</span>
       <img ref="imgDom" v-show="!loading" class="current-img" alt="" />
     </div>
     <div></div>
@@ -73,6 +74,7 @@ export default defineComponent({
     });
     const zoomRate = ref(1);
     const loading = ref(false);
+    const error = ref(false);
     const imgInfo = reactive({
       w: 0,
       h: 0,
@@ -84,6 +86,7 @@ export default defineComponent({
       zoomRate,
       imgInfo,
       loadIcon,
+      error,
     };
   },
   methods: {
@@ -99,11 +102,12 @@ export default defineComponent({
         if (this.dataConfig) {
           img.src = this.dataConfig.urls[this.dataConfig.current - 1];
         }
+        this.error = false;
         img.onload = () => {
+          this.config.success && this.config.success("success");
           const imgRate = img.width / img.height;
           this.imgInfo.w = img.width;
           this.imgInfo.h = img.height;
-          console.log("4323", imgRate, rate);
           if (imgRate > rate) {
             if (img.width > windowWidth * 0.7) {
               img.style.width = windowWidth * 0.7 + "px";
@@ -122,6 +126,11 @@ export default defineComponent({
             }
           }
           this.loading = false;
+        };
+        img.onerror = (e) => {
+          this.loading = false;
+          this.error = true;
+          this.config.fail && this.config.fail("fail");
         };
       });
     },
