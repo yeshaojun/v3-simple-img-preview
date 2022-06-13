@@ -50,12 +50,11 @@
           @touchstart="touchstart"
           @touchmove="touchmove"
           @touchend="touchend"
-          @touchcancel="touchcancel"
         >
           <img
             :src="item"
-            alt=""
             :style="index === dataConfig.current - 1 ? imgStyle : null"
+            alt=""
             style="width: 100%"
           />
         </swipe-item>
@@ -90,12 +89,14 @@ import { loadIcon } from "./icon";
 import swipe from "@/components/swipe/index.vue";
 import swipeItem from "@/components/swipeItem/index.vue";
 import { preventDefault } from "./utils";
-const MOVEDISTANCE = 50;
+import { useTouch } from "../utils/index";
+const touch = useTouch();
 let touchStartTime: number;
 let startScale: number;
 let startDistance: number;
 let startMoveX: number;
 let startMoveY: number;
+let doubleTapTimer: any;
 export default defineComponent({
   name: "img-preview",
   components: {
@@ -132,7 +133,6 @@ export default defineComponent({
       displayWidth: 0,
       displayHeight: 0,
     });
-    const timer = ref(0);
     return {
       imgDom,
       dataConfig,
@@ -275,6 +275,10 @@ export default defineComponent({
         return;
       }
       const { touches } = e;
+
+      touch.start(e);
+      // this.startX = touches[0].clientX;
+      // this.startY =touches[0].clientY;
       this.state.moving = touches.length === 1 && this.state.scale !== 1;
       this.state.zooming = touches.length === 2;
       startMoveX = this.state.moveX;
@@ -287,18 +291,26 @@ export default defineComponent({
     },
     touchmove(e: TouchEvent) {
       const { touches } = e;
+      touch.move(e);
       if (this.state.moving || this.state.zooming) {
         preventDefault(e, true);
       }
       if (this.state.moving) {
-        console.log("move");
+        const { deltaX, deltaY } = touch;
+        const moveX = deltaX.value + startMoveX;
+        const moveY = deltaY.value + startMoveY;
+        const maxMoveX = Number(window.outerWidth);
+        const maxMoveY = Number(window.outerHeight);
+        this.state.moveX = this.clamp(moveX, -maxMoveX, maxMoveX);
+        this.state.moveY = this.clamp(moveY, -maxMoveY, maxMoveY);
       }
 
       if (this.state.zooming && touches.length === 2) {
         const distance = this.getDistance(touches);
         const scale = (startScale * distance) / startDistance;
         if (scale < 1) {
-          this.state.scale = 1;
+          // this.state.scale = 1;
+          this.state.scale = scale;
         } else if (scale > 3) {
           this.state.scale = 3;
         } else {
@@ -307,15 +319,48 @@ export default defineComponent({
       }
     },
     touchend(e: TouchEvent) {
-      console.log("end");
-    },
-    touchcancel(e: TouchEvent) {
-      console.log("touchcancel");
-    },
-    getMidpoint(p1: any, p2: any) {
-      const x = (p1.pageX + p2.pageX) / 2;
-      const y = (p1.pageY + p2.pageY) / 2;
-      return [x, y];
+      let stopPropagation = false;
+      if (this.state.moving || this.state.zooming) {
+        stopPropagation = true;
+
+        if (
+          this.state.moving &&
+          startMoveX === this.state.moveX &&
+          startMoveY === this.state.moveY
+        ) {
+          stopPropagation = false;
+        }
+
+        if (!e.touches.length) {
+          if (this.state.zooming) {
+            const maxMoveX = Number(window.outerWidth);
+            const maxMoveY = Number(window.outerHeight);
+            this.state.moveX = this.clamp(
+              this.state.moveX,
+              -maxMoveX,
+              maxMoveX
+            );
+            this.state.moveY = this.clamp(
+              this.state.moveY,
+              -maxMoveY,
+              maxMoveY
+            );
+            this.state.zooming = false;
+          }
+          this.state.moving = false;
+          startMoveX = 0;
+          startMoveY = 0;
+          startScale = 1;
+
+          if (this.state.scale < 1) {
+            this.resetScale();
+          }
+        }
+      } else {
+        this.checkTap();
+      }
+      preventDefault(e, stopPropagation);
+      touch.reset();
     },
     getDistance(touches: TouchList) {
       return Math.sqrt(
@@ -323,14 +368,40 @@ export default defineComponent({
           (touches[0].clientY - touches[1].clientY) ** 2
       );
     },
-    getAngle(p1: any, p2: any) {
-      const x = p1.pageX - p2.pageX,
-        y = p1.pageY - p2.pageY;
-      return (Math.atan2(y, x) * 180) / Math.PI;
-    },
     changeSwipe(index: number) {
       this.dataConfig.current = index + 1;
+      this.resetScale();
     },
+    clamp(num: number, min: number, max: number): number {
+      return Math.min(Math.max(num, min), max);
+    },
+    resetScale() {
+      this.state.scale = 1;
+      this.state.moveX = 0;
+      this.state.moveY = 0;
+    },
+    checkTap() {
+      const { offsetX, offsetY } = touch;
+      const deltaTime = Date.now() - touchStartTime;
+      const TAP_TIME = 250;
+      const TAP_OFFSET = 5;
+      if (
+        offsetX.value < TAP_OFFSET &&
+        offsetY.value < TAP_OFFSET &&
+        deltaTime < TAP_TIME
+      ) {
+        if (doubleTapTimer) {
+          clearTimeout(doubleTapTimer);
+          doubleTapTimer = null;
+          // toggleScale();
+        } else {
+          doubleTapTimer = setTimeout(() => {
+            this.close();
+            doubleTapTimer = null;
+          }, TAP_TIME);
+        }
+      }
+    }
   },
   mounted() {
     this.loadIcon();
@@ -430,11 +501,11 @@ export default defineComponent({
   /* position: absolute;
   top: 50%;
   transform: translateY(-50%); */
-  position: relative;
+  height: calc(100vh - 50px);
 }
-
-.ysj-image-container-content {
+.ysj-my-swipe .ysj-swipe-item {
   display: flex;
-  /* align-items: center; */
+  align-items: center;
+  height: 100%;
 }
 </style>
