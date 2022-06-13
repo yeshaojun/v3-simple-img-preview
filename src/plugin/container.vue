@@ -5,7 +5,10 @@
       <div v-if="!config.header">
         {{ dataConfig.current + "/" + dataConfig.urls.length }}
       </div>
-      <div class="ysj-image-opt" v-if="!config.header">
+      <div
+        class="ysj-image-opt"
+        v-if="!config.header && browserRedirect === 'Desktop'"
+      >
         <button @click="zoom('big')">
           <svg class="iconpark-icon"><use href="#zoom-in"></use></svg>
         </button>
@@ -27,22 +30,50 @@
         </button>
       </div>
     </div>
-    <div class="ysj-image-container-content">
+    <div
+      class="ysj-image-container-content"
+      v-if="browserRedirect === 'Desktop'"
+    >
       <span v-show="loading" class="loading-wrapper">图片加载中</span>
       <span v-show="error" class="loading-wrapper">图片加载失败</span>
       <img ref="imgDom" v-show="!loading" class="current-img" alt="" />
     </div>
-    <div></div>
+    <div v-else class="ysj-image-container-content">
+      <swipe
+        class="ysj-my-swipe"
+        :active="dataConfig.current - 1"
+        @change="changeSwipe"
+      >
+        <swipe-item
+          v-for="(item, index) in config.urls"
+          :key="item"
+          @touchstart="touchstart"
+          @touchmove="touchmove"
+          @touchend="touchend"
+          @touchcancel="touchcancel"
+        >
+          <img
+            :src="item"
+            alt=""
+            :style="index === dataConfig.current - 1 ? imgStyle : null"
+            style="width: 100%"
+          />
+        </swipe-item>
+      </swipe>
+    </div>
     <div
       class="ysj-image-arraw-left"
-      v-if="dataConfig.current > 1"
+      v-if="dataConfig.current > 1 && browserRedirect === 'Desktop'"
       @click="arrawLeft"
     >
       <svg class="iconpark-icon"><use href="#left"></use></svg>
     </div>
     <div
       class="ysj-image-arraw-right"
-      v-if="dataConfig.current < dataConfig.urls.length"
+      v-if="
+        dataConfig.current < dataConfig.urls.length &&
+        browserRedirect === 'Desktop'
+      "
       @click="arrawRight"
     >
       <svg class="iconpark-icon"><use href="#right"></use></svg>
@@ -54,10 +85,23 @@ import { ImgPreviewConfigType } from "../types/index";
 // config = { urls: [], current: 1, loop: false, header: vdom, success, fail }
 // loop 是否可循环预览
 // 右上角默认 关闭，下载，放大/缩小，自定义
-import { defineComponent, PropType, ref, reactive } from "vue";
+import { defineComponent, PropType, ref, reactive, CSSProperties } from "vue";
 import { loadIcon } from "./icon";
+import swipe from "@/components/swipe/index.vue";
+import swipeItem from "@/components/swipeItem/index.vue";
+import { preventDefault } from "./utils";
+const MOVEDISTANCE = 50;
+let touchStartTime: number;
+let startScale: number;
+let startDistance: number;
+let startMoveX: number;
+let startMoveY: number;
 export default defineComponent({
   name: "img-preview",
+  components: {
+    swipe,
+    swipeItem,
+  },
   props: {
     config: {
       type: Object as PropType<ImgPreviewConfigType>,
@@ -72,22 +116,54 @@ export default defineComponent({
       current: 0,
       urls: [],
     });
-    const zoomRate = ref(1);
     const loading = ref(false);
     const error = ref(false);
     const imgInfo = reactive({
       w: 0,
       h: 0,
     });
+    const state = reactive({
+      scale: 1,
+      moveX: 0,
+      moveY: 0,
+      moving: false,
+      zooming: false,
+      imageRatio: 0,
+      displayWidth: 0,
+      displayHeight: 0,
+    });
+    const timer = ref(0);
     return {
       imgDom,
       dataConfig,
       loading,
-      zoomRate,
       imgInfo,
       loadIcon,
       error,
+      state,
     };
+  },
+  computed: {
+    browserRedirect() {
+      return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+        navigator.userAgent
+      )
+        ? "Mobile"
+        : "Desktop";
+    },
+    imgStyle() {
+      const { scale, moveX, moveY, moving, zooming } = this.state;
+      const style: CSSProperties = {
+        transitionDuration: zooming || moving ? "0s" : ".3s",
+      };
+      if (scale !== 1) {
+        const offsetX = moveX / scale;
+        const offsetY = moveY / scale;
+        style.transform = `scale(${scale}, ${scale}) translate(${offsetX}px, ${offsetY}px)`;
+      }
+
+      return style;
+    },
   },
   methods: {
     loadImage() {
@@ -194,32 +270,75 @@ export default defineComponent({
       const dom = document.getElementsByClassName("ysj-imgage-wrapper");
       (dom[0] as HTMLDivElement).style.display = "none";
     },
-    zoom(type: string) {
-      // this.checkZoom();
-      console.log("his.imgInfo", this.imgInfo);
-      if (type === "big") {
-        this.zoomRate = Number((this.zoomRate + 0.2).toFixed(1));
-      } else {
-        console.log("this.zoomRate", this.zoomRate);
-        if (this.zoomRate <= 0.2) {
-          return;
+    touchstart(e: TouchEvent) {
+      if (this.browserRedirect === "Desktop") {
+        return;
+      }
+      const { touches } = e;
+      this.state.moving = touches.length === 1 && this.state.scale !== 1;
+      this.state.zooming = touches.length === 2;
+      startMoveX = this.state.moveX;
+      startMoveY = this.state.moveY;
+      touchStartTime = Date.now();
+      if (this.state.zooming) {
+        startScale = this.state.scale;
+        startDistance = this.getDistance(e.touches);
+      }
+    },
+    touchmove(e: TouchEvent) {
+      const { touches } = e;
+      if (this.state.moving || this.state.zooming) {
+        preventDefault(e, true);
+      }
+      if (this.state.moving) {
+        console.log("move");
+      }
+
+      if (this.state.zooming && touches.length === 2) {
+        const distance = this.getDistance(touches);
+        const scale = (startScale * distance) / startDistance;
+        if (scale < 1) {
+          this.state.scale = 1;
+        } else if (scale > 3) {
+          this.state.scale = 3;
         } else {
-          this.zoomRate = Number((this.zoomRate - 0.2).toFixed(1));
+          this.state.scale = scale;
         }
       }
-      console.log("type", type, this.zoomRate);
-      const img = this.$refs.imgDom as HTMLImageElement;
-      const width = this.imgInfo.w * this.zoomRate;
-      const height = this.imgInfo.h * this.zoomRate;
-      img.style.width = width + "px";
-      img.style.height = height + "px";
+    },
+    touchend(e: TouchEvent) {
+      console.log("end");
+    },
+    touchcancel(e: TouchEvent) {
+      console.log("touchcancel");
+    },
+    getMidpoint(p1: any, p2: any) {
+      const x = (p1.pageX + p2.pageX) / 2;
+      const y = (p1.pageY + p2.pageY) / 2;
+      return [x, y];
+    },
+    getDistance(touches: TouchList) {
+      return Math.sqrt(
+        (touches[0].clientX - touches[1].clientX) ** 2 +
+          (touches[0].clientY - touches[1].clientY) ** 2
+      );
+    },
+    getAngle(p1: any, p2: any) {
+      const x = p1.pageX - p2.pageX,
+        y = p1.pageY - p2.pageY;
+      return (Math.atan2(y, x) * 180) / Math.PI;
+    },
+    changeSwipe(index: number) {
+      this.dataConfig.current = index + 1;
     },
   },
   mounted() {
     this.loadIcon();
     if (this.config) {
       this.dataConfig = Object.assign({}, this.config);
-      this.loadImage();
+      if (this.browserRedirect === "Desktop") {
+        this.loadImage();
+      }
     }
   },
 });
@@ -238,7 +357,7 @@ export default defineComponent({
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 99999;
+  z-index: 1;
   color: #fff;
 }
 .ysj-image-container-header {
@@ -305,5 +424,17 @@ export default defineComponent({
   left: 50%;
   transform: translateX(-50%) translateY(-50%);
   color: #999;
+}
+
+.ysj-my-swipe {
+  /* position: absolute;
+  top: 50%;
+  transform: translateY(-50%); */
+  position: relative;
+}
+
+.ysj-image-container-content {
+  display: flex;
+  /* align-items: center; */
 }
 </style>
