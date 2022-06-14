@@ -23,7 +23,7 @@ import ysjSwipeItem from "./components/swipeItem/index.vue";
       previewImage({
         current: 1,
         urls: [
-          "https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fup.enterdesk.com%2Fedpic%2Ffe%2F11%2F97%2Ffe119792285b42e687ebf4367f77c8de.jpg&refer=http%3A%2F%2Fup.enterdesk.com&app=2002&size=f9999,10000&q=a80&n=0&g=0n&fmt=auto?sec=1657441291&t=1cbdd8bd577a1c57f7c763dd58bfe60a",
+          "https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fup.enterdesk.com%2Fphoto%2F2012-3-2%2Fenterdesk.com-B526ECADD33DBD367676A93E051BA1EC.jpg&refer=http%3A%2F%2Fup.enterdesk.com&app=2002&size=f9999,10000&q=a80&n=0&g=0n&fmt=auto?sec=1657767801&t=b1f4c5be860caf2d1dac70b52f2b9765",
           "https://img2.baidu.com/it/u=3990732507,3148015412&fm=253&fmt=auto&app=138&f=JPEG?w=500&h=500",
         ],
         fail: (e) => {

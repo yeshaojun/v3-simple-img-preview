@@ -36,9 +36,9 @@
     >
       <span v-show="loading" class="loading-wrapper">图片加载中</span>
       <span v-show="error" class="loading-wrapper">图片加载失败</span>
-      <img ref="imgDom" v-show="!loading" class="current-img" alt="" />
+      <img ref="imgDom" v-show="!loading" alt="" />
     </div>
-    <div v-else class="ysj-image-container-content">
+    <div v-else>
       <swipe
         class="ysj-my-swipe"
         :active="dataConfig.current - 1"
@@ -513,14 +513,18 @@ export default defineComponent({
 }
 
 .ysj-my-swipe {
-  /* position: absolute;
-  top: 50%;
-  transform: translateY(-50%); */
   height: calc(100vh - 50px);
 }
 .ysj-my-swipe .ysj-swipe-item {
   display: flex;
   align-items: center;
   height: 100%;
+}
+.ysj-image-container-content {
+  height: 100vh;
+  overflow: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 </style>
