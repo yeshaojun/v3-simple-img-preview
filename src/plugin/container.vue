@@ -161,7 +161,6 @@ export default defineComponent({
         const offsetY = moveY / scale;
         style.transform = `scale(${scale}, ${scale}) translate(${offsetX}px, ${offsetY}px)`;
       }
-
       return style;
     },
   },
@@ -266,7 +265,6 @@ export default defineComponent({
       return document.fullscreenElement || false;
     },
     close() {
-      console.log("434");
       const dom = document.getElementsByClassName("ysj-imgage-wrapper");
       (dom[0] as HTMLDivElement).style.display = "none";
     },
@@ -277,8 +275,6 @@ export default defineComponent({
       const { touches } = e;
 
       touch.start(e);
-      // this.startX = touches[0].clientX;
-      // this.startY =touches[0].clientY;
       this.state.moving = touches.length === 1 && this.state.scale !== 1;
       this.state.zooming = touches.length === 2;
       startMoveX = this.state.moveX;
@@ -401,7 +397,7 @@ export default defineComponent({
           }, TAP_TIME);
         }
       }
-    }
+    },
   },
   mounted() {
     this.loadIcon();

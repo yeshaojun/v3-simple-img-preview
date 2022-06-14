@@ -12,9 +12,8 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, ref, reactive, watchEffect } from "vue";
-let touchStartTime: number;
-const CHECKCONST = 20;
+import { defineComponent, ref, reactive } from "vue";
+const CHECKCONST = window.outerWidth / 4;
 export default defineComponent({
   props: {
     loop: {
@@ -60,7 +59,6 @@ export default defineComponent({
       this.reset();
       this.startX = event.touches[0].clientX;
       this.startY = event.touches[0].clientY;
-      touchStartTime = Date.now();
       this.state.swiping = true;
     },
     touchmove(event: TouchEvent) {
@@ -70,12 +68,12 @@ export default defineComponent({
         this.deltaY = touch.clientY - this.startY;
         this.offsetX = Math.abs(this.deltaX);
         this.offsetY = Math.abs(this.deltaY);
-        if (this.deltaX > 0 && this.deltaX > CHECKCONST) {
+        if (this.deltaX > 0) {
           // 向右滑
           if (this.checkActive("right")) {
             this.move("right");
           }
-        } else if (this.deltaX < 0 && this.deltaX < -CHECKCONST) {
+        } else if (this.deltaX < 0) {
           // 向左滑
           if (this.checkActive("left")) {
             this.move("left");
@@ -87,7 +85,6 @@ export default defineComponent({
       if (!this.state.swiping) {
         return;
       }
-      console.log("end");
       const dom = this.$refs.trackDom as HTMLDivElement;
       this.state.swiping = false;
       if (this.deltaX > CHECKCONST) {
@@ -112,6 +109,8 @@ export default defineComponent({
           this.state.active += 1;
           this.move("left");
         }
+      } else {
+        this.move("");
       }
     },
     reset() {
@@ -124,7 +123,7 @@ export default defineComponent({
     },
     move(type: string) {
       const dom = this.$refs.trackDom as HTMLDivElement;
-      dom.style.transform = "transition-duration: 500ms";
+      dom.style.transitionDuration = `${this.state.swiping ? 0 : 500}ms`;
       if (type === "left") {
         let offset = this.state.active * this.state.width;
         if (this.state.swiping) {
@@ -191,5 +190,6 @@ export default defineComponent({
   display: flex;
   flex-wrap: nowrap;
   height: 100%;
+  transition-property: transform;
 }
 </style>
