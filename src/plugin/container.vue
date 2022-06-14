@@ -16,7 +16,7 @@
           <svg class="iconpark-icon"><use href="#zoom-out"></use></svg>
         </button>
         <a
-          :href="dataConfig.urls[dataConfig.current]"
+          :href="dataConfig.urls[dataConfig.current - 1]"
           target="_blank"
           :download="'image' + dataConfig.current"
         >
@@ -123,6 +123,7 @@ export default defineComponent({
       w: 0,
       h: 0,
     });
+    const zoomRate = ref(1);
     const state = reactive({
       scale: 1,
       moveX: 0,
@@ -141,6 +142,7 @@ export default defineComponent({
       loadIcon,
       error,
       state,
+      zoomRate,
     };
   },
   computed: {
@@ -397,6 +399,23 @@ export default defineComponent({
           }, TAP_TIME);
         }
       }
+    },
+    zoom(type: string) {
+      if (type === "big") {
+        this.zoomRate = Number((this.zoomRate + 0.2).toFixed(1));
+      } else {
+        console.log("this.zoomRate", this.zoomRate);
+        if (this.zoomRate <= 0.2) {
+          return;
+        } else {
+          this.zoomRate = Number((this.zoomRate - 0.2).toFixed(1));
+        }
+      }
+      const img = this.$refs.imgDom as HTMLImageElement;
+      const width = this.imgInfo.w * this.zoomRate;
+      const height = this.imgInfo.h * this.zoomRate;
+      img.style.width = width + "px";
+      img.style.height = height + "px";
     },
   },
   mounted() {

@@ -13,7 +13,6 @@ import { Options, Vue } from "vue-class-component";
 import { previewImage } from "./plugin/index";
 import ysjSwipe from "./components/swipe/index.vue";
 import ysjSwipeItem from "./components/swipeItem/index.vue";
-import VConsole from "vconsole";
 @Options({
   components: {
     ysjSwipe,
@@ -32,9 +31,6 @@ import VConsole from "vconsole";
         },
       });
     },
-  },
-  mounted() {
-    const vConsole = new VConsole();
   },
 })
 export default class App extends Vue {}
