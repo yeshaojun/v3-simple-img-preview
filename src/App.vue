@@ -9,11 +9,11 @@
 </template>
 
 <script lang="ts">
-import { Options, Vue } from "vue-class-component";
 import { previewImage } from "./plugin/index";
 import ysjSwipe from "./components/swipe/index.vue";
 import ysjSwipeItem from "./components/swipeItem/index.vue";
-@Options({
+import { defineComponent } from "vue";
+export default defineComponent({
   components: {
     ysjSwipe,
     ysjSwipeItem,
@@ -32,8 +32,7 @@ import ysjSwipeItem from "./components/swipeItem/index.vue";
       });
     },
   },
-})
-export default class App extends Vue {}
+});
 </script>
 
 <style>
