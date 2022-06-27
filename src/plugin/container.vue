@@ -15,13 +15,9 @@
         <button @click="zoom('small')">
           <svg class="iconpark-icon"><use href="#zoom-out"></use></svg>
         </button>
-        <a
-          :href="dataConfig.urls[dataConfig.current - 1]"
-          target="_blank"
-          :download="'image' + dataConfig.current"
-        >
+        <button @click="dwonload">
           <svg class="iconpark-icon"><use href="#download-four"></use></svg>
-        </a>
+        </button>
         <button @click="getFull">
           <svg class="iconpark-icon"><use href="#full-screen"></use></svg>
         </button>
@@ -501,6 +497,10 @@ export default defineComponent({
         }
       });
     },
+    dwonload() {
+      let url1 = this.dataConfig.urls[this.dataConfig.current - 1];
+      window.open(url1, "_blank");
+    },
   },
   mounted() {
     this.loadIcon();
@@ -555,12 +555,13 @@ export default defineComponent({
   display: inline-block;
   height: 44px;
   line-height: 44px;
-  width: 24px;
+  width: 28px;
   margin: 0 10px;
   color: #fff;
   font-size: 20px;
   background-color: transparent;
   border-width: 0;
+  text-align: center;
 }
 
 .ysj-image-opt button:focus,
