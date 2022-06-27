@@ -181,8 +181,9 @@ export default defineComponent({
       return style;
     },
     imgTransform() {
-      const { offsetX, offsetY } = this.imgPosition;
+      const { offsetX, offsetY, isdown } = this.imgPosition;
       const style: CSSProperties = {
+        transitionDuration: isdown ? "0s" : ".3s",
         transform: `translate(${offsetX}px, ${offsetY}px)`,
       };
       return style;
@@ -610,5 +611,8 @@ export default defineComponent({
   display: flex;
   align-items: center;
   justify-content: center;
+}
+.ysj-image-container-content img {
+  transition: all 0.3 ease;
 }
 </style>
