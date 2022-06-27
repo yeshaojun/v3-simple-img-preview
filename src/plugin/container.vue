@@ -32,11 +32,14 @@
     </div>
     <div
       class="ysj-image-container-content"
+      @mousedown="mousedown"
+      @mousemove="mousemove"
+      @mouseup="mouseup"
       v-if="browserRedirect === 'Desktop'"
     >
       <span v-show="loading" class="loading-wrapper">图片加载中</span>
       <span v-show="error" class="loading-wrapper">图片加载失败</span>
-      <img ref="imgDom" v-show="!loading" alt="" />
+      <img ref="imgDom" v-show="!loading" alt="" :style="imgTransform" />
     </div>
     <div v-else>
       <swipe
@@ -63,7 +66,7 @@
     <div
       class="ysj-image-arraw-left"
       v-if="dataConfig.current > 1 && browserRedirect === 'Desktop'"
-      @click="arrawLeft"
+      @click.stop="arrawLeft"
     >
       <svg class="iconpark-icon"><use href="#left"></use></svg>
     </div>
@@ -73,7 +76,7 @@
         dataConfig.current < dataConfig.urls.length &&
         browserRedirect === 'Desktop'
       "
-      @click="arrawRight"
+      @click.stop="arrawRight"
     >
       <svg class="iconpark-icon"><use href="#right"></use></svg>
     </div>
@@ -134,6 +137,16 @@ export default defineComponent({
       displayWidth: 0,
       displayHeight: 0,
     });
+    const isHidden = ref(false);
+    const imgPosition = reactive({
+      startX: 0,
+      startY: 0,
+      offsetX: 0,
+      offsetY: 0,
+      originX: 0,
+      originY: 0,
+      isdown: false,
+    });
     return {
       imgDom,
       dataConfig,
@@ -143,6 +156,8 @@ export default defineComponent({
       error,
       state,
       zoomRate,
+      isHidden,
+      imgPosition,
     };
   },
   computed: {
@@ -165,15 +180,22 @@ export default defineComponent({
       }
       return style;
     },
+    imgTransform() {
+      const { offsetX, offsetY } = this.imgPosition;
+      const style: CSSProperties = {
+        transform: `translate(${offsetX}px, ${offsetY}px)`,
+      };
+      return style;
+    },
   },
   methods: {
     loadImage() {
       const windowWidth = window.innerWidth;
       const windowheight = window.innerHeight;
       const rate = windowWidth / windowheight;
+      const img = this.$refs.imgDom as HTMLImageElement;
       this.$nextTick(() => {
         this.loading = true;
-        const img = this.$refs.imgDom as HTMLImageElement;
         img.removeAttribute("width");
         img.removeAttribute("height");
         if (this.dataConfig) {
@@ -192,6 +214,9 @@ export default defineComponent({
                 img.height / (img.width / (windowWidth * 0.7)) + "px";
               this.imgInfo.w = windowWidth * 0.7;
               this.imgInfo.h = img.height / (img.width / (windowWidth * 0.7));
+            } else {
+              img.style.width = img.width + "px";
+              img.style.height = img.height + "px";
             }
           } else {
             if (img.height > windowheight * 0.7) {
@@ -200,6 +225,9 @@ export default defineComponent({
                 img.width / (img.height / (windowheight * 0.7)) + "px";
               this.imgInfo.w = img.width / (img.height / (windowheight * 0.7));
               this.imgInfo.h = windowheight * 0.7;
+            } else {
+              img.style.width = img.width + "px";
+              img.style.height = img.height + "px";
             }
           }
           this.loading = false;
@@ -218,6 +246,8 @@ export default defineComponent({
       ) {
         return;
       }
+      this.resetImgPositon();
+      this.zoomRate = 1;
       if (
         this.dataConfig.current === this.dataConfig.urls.length &&
         this.dataConfig.loop
@@ -232,6 +262,8 @@ export default defineComponent({
       if (this.dataConfig.current == 1 && !this.dataConfig.loop) {
         return;
       }
+      this.resetImgPositon();
+      this.zoomRate = 1;
       if (this.dataConfig.loop && this.dataConfig.current == 1) {
         this.dataConfig.current = this.dataConfig.urls.length;
       } else {
@@ -297,8 +329,8 @@ export default defineComponent({
         const { deltaX, deltaY } = touch;
         const moveX = deltaX.value + startMoveX;
         const moveY = deltaY.value + startMoveY;
-        const maxMoveX = Number(window.outerWidth);
-        const maxMoveY = Number(window.outerHeight);
+        const maxMoveX = Number(window.innerWidth);
+        const maxMoveY = Number(window.innerHeight);
         this.state.moveX = this.clamp(moveX, -maxMoveX, maxMoveX);
         this.state.moveY = this.clamp(moveY, -maxMoveY, maxMoveY);
       }
@@ -331,8 +363,8 @@ export default defineComponent({
 
         if (!e.touches.length) {
           if (this.state.zooming) {
-            const maxMoveX = Number(window.outerWidth);
-            const maxMoveY = Number(window.outerHeight);
+            const maxMoveX = Number(window.innerWidth);
+            const maxMoveY = Number(window.innerHeight);
             this.state.moveX = this.clamp(
               this.state.moveX,
               -maxMoveX,
@@ -401,10 +433,10 @@ export default defineComponent({
       }
     },
     zoom(type: string) {
+      this.resetImgPositon();
       if (type === "big") {
         this.zoomRate = Number((this.zoomRate + 0.2).toFixed(1));
       } else {
-        console.log("this.zoomRate", this.zoomRate);
         if (this.zoomRate <= 0.2) {
           return;
         } else {
@@ -414,13 +446,65 @@ export default defineComponent({
       const img = this.$refs.imgDom as HTMLImageElement;
       const width = this.imgInfo.w * this.zoomRate;
       const height = this.imgInfo.h * this.zoomRate;
-      img.style.width = width + "px";
-      img.style.height = height + "px";
+      if (img) {
+        img.style.width = width + "px";
+        img.style.height = height + "px";
+      }
+      if (width > window.innerWidth || height > window.innerHeight) {
+        this.isHidden = true;
+      } else {
+        this.isHidden = false;
+      }
+    },
+    // 监听图片事件
+    mousedown(e: MouseEvent) {
+      e.preventDefault();
+      if (this.isHidden) {
+        this.imgPosition.startX = e.clientX;
+        this.imgPosition.startY = e.clientY;
+        this.imgPosition.isdown = true;
+        (this.$refs.imgDom as HTMLImageElement).style.cursor = "move";
+      }
+    },
+    mousemove(e: MouseEvent) {
+      if (this.isHidden && this.imgPosition.isdown) {
+        const { originX, originY, startX, startY } = this.imgPosition;
+        let x = originX + e.clientX - startX;
+        let y = originY + e.clientY - startY;
+        this.imgPosition.offsetX = x;
+        this.imgPosition.offsetY = y;
+      }
+    },
+    mouseup(e: MouseEvent) {
+      e.preventDefault();
+      (this.$refs.imgDom as HTMLImageElement).style.cursor = "default";
+      this.imgPosition.isdown = false;
+      this.imgPosition.originX = this.imgPosition.offsetX;
+      this.imgPosition.originY = this.imgPosition.offsetY;
+    },
+    resetImgPositon() {
+      this.imgPosition.offsetX = 0;
+      this.imgPosition.offsetY = 0;
+      this.imgPosition.originX = 0;
+      this.imgPosition.originY = 0;
+    },
+    init() {
+      window.addEventListener("mousewheel", (e: any) => {
+        const dom = document.getElementsByClassName("ysj-imgage-wrapper");
+        if ((dom[0] as HTMLDivElement).style.display !== "none") {
+          if (e.wheelDelta > 0) {
+            this.zoom("big");
+          } else {
+            this.zoom("small");
+          }
+        }
+      });
     },
   },
   mounted() {
     this.loadIcon();
     if (this.config) {
+      this.init();
       this.dataConfig = Object.assign({}, this.config);
       if (this.browserRedirect === "Desktop") {
         this.loadImage();
@@ -522,7 +606,7 @@ export default defineComponent({
 }
 .ysj-image-container-content {
   height: 100vh;
-  overflow: auto;
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
