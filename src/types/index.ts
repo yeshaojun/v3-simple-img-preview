@@ -2,6 +2,7 @@ import { VNode, Plugin, Component } from "vue";
 export interface ImgPreviewConfigType {
   urls: string[];
   current: number;
+  maxZoom?: number,
   loop?: boolean;
   header?: VNode;
   success?: (status: string) => void;

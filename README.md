@@ -51,14 +51,15 @@ previewImage({
 })
 ```
 
-| 参数    | 类型     | 说明             |
-| ------- | -------- | ---------------- |
-| urls    | string[] | 图片地址         |
-| current | number   | 当前图片         |
-| loop    | boolean  | 是否循环预览     |
-| header  | vdom     | 自定义工具栏组建 |
-| success | function | 图片加载成功回调 |
-| fail    | function | 图片加载失败回调 |
+| 参数    | 类型     | 说明                         |
+| ------- | -------- | ---------------------------- |
+| urls    | string[] | 图片地址                     |
+| current | number   | 当前图片                     |
+| loop    | boolean  | 是否循环预览                 |
+| maxZoom | number   | 图片放大的最大倍数（默认 3） |
+| header  | vdom     | 自定义工具栏组建             |
+| success | function | 图片加载成功回调             |
+| fail    | function | 图片加载失败回调             |
 
 # 自定义工具栏
 
@@ -112,3 +113,7 @@ this.$previewImage方法的header参数可接受一个vdom,同时通过this.$pre
 6 月 27 日修改
 
 pc 端支持鼠标滚动来放大缩小，当图片大小超过窗口时，不再显示滚动条，改为鼠标拖拽移动
+
+8 月 1 日修改
+
+兼容长图，以及 maxZoom 配置

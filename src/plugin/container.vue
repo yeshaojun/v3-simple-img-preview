@@ -54,7 +54,7 @@
             :src="item"
             :style="index === dataConfig.current - 1 ? imgStyle : null"
             alt=""
-            style="width: 100%"
+            class="img-item"
           />
         </swipe-item>
       </swipe>
@@ -106,13 +106,16 @@ export default defineComponent({
     config: {
       type: Object as PropType<ImgPreviewConfigType>,
       default() {
-        return {};
+        return {
+          maxZoom: 3,
+        };
       },
     },
   },
   setup() {
     const imgDom = ref();
     const dataConfig = ref<ImgPreviewConfigType>({
+      maxZoom: 3,
       current: 0,
       urls: [],
     });
@@ -296,6 +299,15 @@ export default defineComponent({
       return document.fullscreenElement || false;
     },
     close() {
+      if (this.isFull()) {
+        const full = document.exitFullscreen;
+        if (full) {
+          full.call(document);
+        } else if (window.ActiveXObject) {
+          const ws = new window.ActiveXObject("WScript.Shell");
+          ws && ws.SendKeys("F11");
+        }
+      }
       const dom = document.getElementsByClassName("ysj-imgage-wrapper");
       (dom[0] as HTMLDivElement).style.display = "none";
     },
@@ -322,12 +334,13 @@ export default defineComponent({
       if (this.state.moving || this.state.zooming) {
         preventDefault(e, true);
       }
+      const maxZoom = this.config.maxZoom || 3;
       if (this.state.moving) {
         const { deltaX, deltaY } = touch;
         const moveX = deltaX.value + startMoveX;
         const moveY = deltaY.value + startMoveY;
-        const maxMoveX = Number(window.innerWidth);
-        const maxMoveY = Number(window.innerHeight);
+        const maxMoveX = Number(maxZoom * window.innerWidth);
+        const maxMoveY = Number(maxZoom * window.innerHeight);
         this.state.moveX = this.clamp(moveX, -maxMoveX, maxMoveX);
         this.state.moveY = this.clamp(moveY, -maxMoveY, maxMoveY);
       }
@@ -338,8 +351,8 @@ export default defineComponent({
         if (scale < 1) {
           // this.state.scale = 1;
           this.state.scale = scale;
-        } else if (scale > 3) {
-          this.state.scale = 3;
+        } else if (scale > maxZoom) {
+          this.state.scale = maxZoom;
         } else {
           this.state.scale = scale;
         }
@@ -431,6 +444,10 @@ export default defineComponent({
     },
     zoom(type: string) {
       this.resetImgPositon();
+      const maxZoom = this.config.maxZoom || 3;
+      if (this.zoomRate >= maxZoom && type === "big") {
+        return;
+      }
       if (type === "big") {
         this.zoomRate = Number((this.zoomRate + 0.2).toFixed(1));
       } else {
@@ -440,6 +457,7 @@ export default defineComponent({
           this.zoomRate = Number((this.zoomRate - 0.2).toFixed(1));
         }
       }
+      // console.log("zoomRate", this.zoomRate);
       const img = this.$refs.imgDom as HTMLImageElement;
       const width = this.imgInfo.w * this.zoomRate;
       const height = this.imgInfo.h * this.zoomRate;
@@ -605,7 +623,13 @@ export default defineComponent({
   display: flex;
   align-items: center;
   height: 100%;
+  justify-content: center;
 }
+.ysj-my-swipe .img-item {
+  max-width: 100%;
+  max-height: 100%;
+}
+
 .ysj-image-container-content {
   height: 100vh;
   overflow: hidden;

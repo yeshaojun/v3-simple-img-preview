@@ -22,7 +22,9 @@ export default defineComponent({
     preview() {
       previewImage({
         current: 1,
+        maxZoom: 10,
         urls: [
+          "https://imgcrm.nbdeli.com/100016551/xq.jpg",
           "https://sandbox.rsvp.ai/media/resources/738754654560858112",
           "https://img2.baidu.com/it/u=3990732507,3148015412&fm=253&fmt=auto&app=138&f=JPEG?w=500&h=500",
         ],
