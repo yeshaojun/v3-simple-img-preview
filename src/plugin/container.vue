@@ -339,8 +339,8 @@ export default defineComponent({
         const { deltaX, deltaY } = touch;
         const moveX = deltaX.value + startMoveX;
         const moveY = deltaY.value + startMoveY;
-        const maxMoveX = Number(maxZoom * window.innerWidth);
-        const maxMoveY = Number(maxZoom * window.innerHeight);
+        const maxMoveX = Number((maxZoom / 2) * window.innerWidth);
+        const maxMoveY = Number((maxZoom / 2) * window.innerHeight);
         this.state.moveX = this.clamp(moveX, -maxMoveX, maxMoveX);
         this.state.moveY = this.clamp(moveY, -maxMoveY, maxMoveY);
       }
@@ -370,11 +370,11 @@ export default defineComponent({
         ) {
           stopPropagation = false;
         }
-
+        const maxZoom = this.config.maxZoom || 3;
         if (!e.touches.length) {
           if (this.state.zooming) {
-            const maxMoveX = Number(window.innerWidth);
-            const maxMoveY = Number(window.innerHeight);
+            const maxMoveX = Number((maxZoom / 2) * window.innerWidth);
+            const maxMoveY = Number((maxZoom / 2) * window.innerHeight);
             this.state.moveX = this.clamp(
               this.state.moveX,
               -maxMoveX,
